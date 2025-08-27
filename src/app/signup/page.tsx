@@ -99,6 +99,8 @@ export default function SignupModalPage() {
                   ) => {
                     setLoading(true);
                     setError(null);
+                    console.log("Form submitted! Values:", values);
+                    setError("Form submitted! Check the browser console for logs.");
                     const {
                       ownerName,
                       email,
@@ -109,7 +111,7 @@ export default function SignupModalPage() {
                       password,
                     } = values;
                     try {
-                      await Backendless.Data.of("Reservations").save({
+                      const reservationRes = await Backendless.Data.of("Reservations").save({
                         ownerName,
                         email,
                         phone,
@@ -117,31 +119,38 @@ export default function SignupModalPage() {
                         service,
                         date,
                       });
-                      // allow duplicate emails for reservations
+                      console.log("Reservation saved:", reservationRes);
+                      let registerRes;
                       try {
-                        await Backendless.UserService.register({
+                        registerRes = await Backendless.UserService.register({
                           email,
                           password,
                           name: ownerName,
                           role: "user",
                         });
-                        // Automatic login
-                        await Backendless.UserService.login(email, password);
+                        console.log("User registered:", registerRes);
+                        // Backendless auto-logs in after registration, no need to login again
                       } catch (userErr: any) {
-                        // exist customers
+                        console.error("Registration error:", userErr);
                         if (userErr && userErr.status === 409) {
-                          await Backendless.UserService.login(email, password);
+                          setError("Email already registered. Please log in manually.");
+                          setGeneratedPassword(null);
+                          setLoading(false);
+                          setSubmitting(false);
+                          return;
                         } else {
-                          throw userErr;
+                          setError("Registration failed: " + (userErr?.message || "Unknown error"));
+                          setGeneratedPassword(null);
+                          setLoading(false);
+                          setSubmitting(false);
+                          return;
                         }
                       }
                       setGeneratedPassword(null);
                       setUserName(ownerName);
                       setSuccess(true);
-                      setTimeout(() => {
-                        router.push("/welcome");
-                      }, 2000);
                     } catch (err: any) {
+                      console.error("Reservation or registration/login error:", err);
                       setError(
                         "Failed to save reservation or register/login user. Please try again."
                       );
@@ -325,9 +334,7 @@ export default function SignupModalPage() {
                 </h3>
                 <p className="text-slate-700 mb-4 text-center">
                   Your booking for our Cat Hotel or Day Care is confirmed and
-                  you are now logged in.
-                  <br />
-                  You will be redirected to your dashboard shortly.
+                  and you can login now.
                 </p>
                 <a
                   href="/services"

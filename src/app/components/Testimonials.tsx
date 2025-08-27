@@ -285,6 +285,7 @@ function Card({
             src={avatar}
             alt={name}
             fill
+            sizes="(max-width: 768px) 100vw, 64px"
             className="object-cover group-hover:scale-105 transition-transform duration-500"
           />
 

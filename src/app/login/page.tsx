@@ -10,6 +10,7 @@ import Backendless from "@/utils/backendless";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [ownerName, setOwnerName] = useState("");
   const [role, setRole] = useState<"user" | "admin">("user");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -21,8 +22,12 @@ export default function LoginPage() {
     setError("");
 
     try {
+      // Force logout any previous session
+      await Backendless.UserService.logout();
+
       // Authenticate with Backendless
       const user = await Backendless.UserService.login(email, password, true);
+      console.log("Login response:", user);
 
       const userRole = (user as any).role || (user as any).userRole || "user";
       if (role !== userRole) {
@@ -34,7 +39,40 @@ export default function LoginPage() {
       login(email, role);
       router.push("/");
     } catch (err: any) {
-      setError("Login failed. Please check your credentials.");
+      console.error("Login error:", err);
+      if (err && err.message) {
+        setError(`Login failed: ${err.message}`);
+      } else {
+        setError("Login failed. Please check your credentials.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+
+    try {
+      // Register with Backendless
+      const registerRes = await Backendless.UserService.register({
+        email,
+        password,
+        name: ownerName,
+        role: "user",
+      });
+      console.log("Registration response:", registerRes);
+      // Registration successful, prompt user to log in manually
+      setError("Registration successful! Please log in manually.");
+    } catch (err: any) {
+      console.error("Registration error:", err);
+      if (err && err.message) {
+        setError(`Registration failed: ${err.message}`);
+      } else {
+        setError("Registration failed. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -197,6 +235,40 @@ export default function LoginPage() {
                     strokeLinejoin="round"
                     strokeWidth={2}
                     d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            {/* Owner's Name (for registration) */}
+            <div>
+              <label
+                htmlFor="ownerName"
+                className="block text-sm font-medium text-slate-700 mb-2"
+              >
+                Owner's Name
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  id="ownerName"
+                  placeholder="Enter your name"
+                  value={ownerName}
+                  onChange={(e) => setOwnerName(e.target.value)}
+                  className="w-full px-4 py-3 pl-11 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200 bg-white/50"
+                  required
+                />
+                <svg
+                  className="absolute left-3 top-3.5 w-5 h-5 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                   />
                 </svg>
               </div>
