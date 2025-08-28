@@ -3,28 +3,39 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { isAuthed, logout } from "@/lib/auth";
+import Backendless from "@/utils/backendless";
+import { isAuthed, getUser, subscribe, syncFromBackendless, logout } from "@/lib/auth";
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [email, setEmail] = useState<string | null>(null);
 
   useEffect(() => {
-    setIsAuthenticated(isAuthed());
+    // 1) mirror any existing Backendless session into our local auth store
+    // 2) set initial UI state
+    // 3) subscribe to changes so UI updates after signup/login/logout
+    syncFromBackendless(Backendless).finally(() => {
+      const u = getUser();
+      setIsAuthenticated(!!u);
+      setEmail(u?.email ?? null);
+    });
+
+    const unsub = subscribe((u) => {
+      setIsAuthenticated(!!u);
+      setEmail(u?.email ?? null);
+    });
+    return () => { unsub(); };
   }, []);
 
-  const handleLogout = () => {
-    logout();
-    setIsAuthenticated(false);
-  };
-
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
-
-  const closeMobileMenu = () => {
+  const handleLogout = async () => {
+    await logout(Backendless); // end local + server session
     setIsMobileMenuOpen(false);
   };
+
+  const toggleMobileMenu = () => setIsMobileMenuOpen((v) => !v);
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
+
   return (
     <header className="sticky top-0 z-50 backdrop-blur-enhanced bg-white/95 border-b border-orange-200/30 shadow-soft">
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
@@ -44,146 +55,92 @@ export default function Navbar() {
             <span className="font-bold text-lg bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
               Purrfect Getaway
             </span>
-            <span className="text-xs text-gray-500 font-medium">
-              Cat Hotel & Daycare
-            </span>
+            <span className="text-xs text-gray-500 font-medium">Cat Hotel & Daycare</span>
           </div>
         </Link>
 
         <div className="hidden items-center gap-6 md:flex">
-          {/* ...existing nav links... */}
-          <Link
-            href="/"
-            className="relative px-3 py-2 font-medium text-gray-700 hover:text-orange-600 transition-all duration-300 group"
-          >
+          <Link href="/" className="relative px-3 py-2 font-medium text-gray-700 hover:text-orange-600 transition-all duration-300 group">
             Home
-            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-yellow-500 group-hover:w-full transition-all duration-300"></span>
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-yellow-500 group-hover:w-full transition-all duration-300" />
           </Link>
-          <Link
-            href="/about"
-            className="relative px-3 py-2 font-medium text-gray-700 hover:text-orange-600 transition-all duration-300 group"
-          >
+          <Link href="/about" className="relative px-3 py-2 font-medium text-gray-700 hover:text-orange-600 transition-all duration-300 group">
             About
-            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-yellow-500 group-hover:w-full transition-all duration-300"></span>
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-yellow-500 group-hover:w-full transition-all duration-300" />
           </Link>
-          <Link
-            href="/services"
-            className="relative px-3 py-2 font-medium text-gray-700 hover:text-orange-600 transition-all duration-300 group"
-          >
+          <Link href="/services" className="relative px-3 py-2 font-medium text-gray-700 hover:text-orange-600 transition-all duration-300 group">
             Services
-            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-yellow-500 group-hover:w-full transition-all duration-300"></span>
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-yellow-500 group-hover:w-full transition-all duration-300" />
           </Link>
-          <Link
-            href="/teams"
-            className="relative px-3 py-2 font-medium text-gray-700 hover:text-orange-600 transition-all duration-300 group"
-          >
+          <Link href="/teams" className="relative px-3 py-2 font-medium text-gray-700 hover:text-orange-600 transition-all duration-300 group">
             Our Teams
-            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-yellow-500 group-hover:w-full transition-all duration-300"></span>
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-yellow-500 group-hover:w-full transition-all duration-300" />
           </Link>
-          <Link
-            href="/blog"
-            className="relative px-3 py-2 font-medium text-gray-700 hover:text-orange-600 transition-all duration-300 group"
-          >
+          <Link href="/blog" className="relative px-3 py-2 font-medium text-gray-700 hover:text-orange-600 transition-all duration-300 group">
             Blog
-            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-yellow-500 group-hover:w-full transition-all duration-300"></span>
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-yellow-500 group-hover:w-full transition-all duration-300" />
           </Link>
 
-          {/* Login/Logout replaces Contact */}
           {isAuthenticated ? (
-            <button
-              onClick={handleLogout}
-              className="btn-primary hover-lift relative overflow-hidden ml-4 px-6 py-2 rounded-xl bg-gray-700 text-white font-semibold shadow-lg hover:bg-orange-600 transition-all duration-300"
-            >
-              Logout
-            </button>
+            <>
+              <span className="text-sm text-gray-600">Hi, {email}</span>
+              <button
+                onClick={handleLogout}
+                className="hover-lift relative overflow-hidden ml-2 px-6 py-2 rounded-xl bg-gray-700 text-white font-semibold shadow-lg hover:bg-orange-600 transition-all duration-300"
+              >
+                Logout
+              </button>
+            </>
           ) : (
             <Link
               href="/login"
-              className="btn-primary hover-lift relative overflow-hidden ml-4 px-6 py-2 rounded-xl bg-gray-700 text-white font-semibold shadow-lg hover:bg-orange-600 transition-all duration-300"
+              className="hover-lift relative overflow-hidden ml-4 px-6 py-2 rounded-xl bg-gray-700 text-white font-semibold shadow-lg hover:bg-orange-600 transition-all duration-300"
             >
               Login
             </Link>
           )}
         </div>
 
-        {/* Mobile Menu Button */}
         <button
           onClick={toggleMobileMenu}
           className="md:hidden p-2 rounded-lg bg-orange-100 hover:bg-orange-200 transition-colors duration-200"
           aria-label="Toggle mobile menu"
         >
           <svg
-            className={`w-6 h-6 text-orange-600 transform transition-transform duration-200 ${
-              isMobileMenuOpen ? "rotate-90" : ""
-            }`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+            className={`w-6 h-6 text-orange-600 transform transition-transform duration-200 ${isMobileMenuOpen ? "rotate-90" : ""}`}
+            fill="none" stroke="currentColor" viewBox="0 0 24 24"
           >
             {isMobileMenuOpen ? (
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             ) : (
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h16"
-              />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             )}
           </svg>
         </button>
       </nav>
 
-      {/* Mobile Menu */}
       <div
         className={`md:hidden transition-all duration-300 ease-in-out ${
           isMobileMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
         } overflow-hidden bg-white/98 backdrop-blur-md border-b border-orange-200/30`}
       >
         <div className="px-6 py-4 space-y-3">
-          {/* ...existing mobile nav links... */}
-          <Link
-            href="/"
-            onClick={closeMobileMenu}
-            className="block px-4 py-3 font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all duration-200"
-          >
+          <Link href="/" onClick={closeMobileMenu} className="block px-4 py-3 font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all duration-200">
             🏠 Home
           </Link>
-          <Link
-            href="/about"
-            onClick={closeMobileMenu}
-            className="block px-4 py-3 font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all duration-200"
-          >
+          <Link href="/about" onClick={closeMobileMenu} className="block px-4 py-3 font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all duration-200">
             ℹ️ About
           </Link>
-          <Link
-            href="/services"
-            onClick={closeMobileMenu}
-            className="block px-4 py-3 font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all duration-200"
-          >
+          <Link href="/services" onClick={closeMobileMenu} className="block px-4 py-3 font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all duration-200">
             🏥 Services
           </Link>
-          <Link
-            href="/teams"
-            onClick={closeMobileMenu}
-            className="block px-4 py-3 font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all duration-200"
-          >
+          <Link href="/teams" onClick={closeMobileMenu} className="block px-4 py-3 font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all duration-200">
             👥 Our Teams
           </Link>
-          <Link
-            href="/blog"
-            onClick={closeMobileMenu}
-            className="block px-4 py-3 font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all duration-200"
-          >
+          <Link href="/blog" onClick={closeMobileMenu} className="block px-4 py-3 font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all duration-200">
             📝 Blog
           </Link>
 
-          {/* Login/Logout replaces Contact in mobile menu */}
           {isAuthenticated ? (
             <button
               onClick={() => { handleLogout(); closeMobileMenu(); }}
@@ -206,10 +163,7 @@ export default function Navbar() {
               href="/booking"
               onClick={closeMobileMenu}
               className="block w-full text-center px-6 py-4 font-semibold rounded-lg transition-all duration-200 shadow-md"
-              style={{
-                backgroundColor: "var(--SoftWood)",
-                color: "var(--white)",
-              }}
+              style={{ backgroundColor: "var(--SoftWood)", color: "var(--white)" }}
             >
               📞 Book Now
             </Link>

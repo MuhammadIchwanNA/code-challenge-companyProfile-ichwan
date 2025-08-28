@@ -1,30 +1,84 @@
-"use client";
+import type BackendlessType from "@/utils/backendless";
 
-export const AUTH_KEY = "pg_auth_user";
-export const ROLE_KEY = "pg_auth_role";
+type Role = "user" | "admin";
+export type AuthUser = { email: string; role: Role };
 
-export type Role = "admin" | "user";
+const KEY = "pg_auth"; // localStorage key
 
-export function login(email: string, role: Role = "user") {
-  localStorage.setItem(AUTH_KEY, email);
-  localStorage.setItem(ROLE_KEY, role);
+// ---- utils ----
+const canUseStorage = () => typeof window !== "undefined";
+const read = (): AuthUser | null => {
+  if (!canUseStorage()) return null;
+  try {
+    const raw = window.localStorage.getItem(KEY);
+    return raw ? (JSON.parse(raw) as AuthUser) : null;
+  } catch {
+    return null;
+  }
+};
+const write = (u: AuthUser | null) => {
+  if (!canUseStorage()) return;
+  if (!u) window.localStorage.removeItem(KEY);
+  else window.localStorage.setItem(KEY, JSON.stringify(u));
+};
+
+// Minimal pub/sub so UI can react to auth changes
+type Sub = (u: AuthUser | null) => void;
+const subs = new Set<Sub>();
+const notify = () => {
+  const u = read();
+  subs.forEach((fn) => fn(u));
+};
+export const subscribe = (fn: Sub) => {
+  subs.add(fn);
+  return () => subs.delete(fn);
+};
+// React to cross-tab changes
+if (canUseStorage()) {
+  window.addEventListener("storage", (e) => {
+    if (e.key === KEY) notify();
+  });
 }
 
-export function logout() {
-  localStorage.removeItem(AUTH_KEY);
-  localStorage.removeItem(ROLE_KEY);
+// ---- public API ----
+export function login(email: string, role: Role) {
+  write({ email, role });
+  notify();
 }
 
-export function getUser(): { email: string; role: Role } | null {
-  const email = localStorage.getItem(AUTH_KEY);
-  const role = (localStorage.getItem(ROLE_KEY) as Role) || "user";
-  return email ? { email, role } : null;
+export async function logout(Backendless?: typeof BackendlessType) {
+  write(null);
+  notify();
+
+  try {
+    if (Backendless) await Backendless.UserService.logout();
+  } catch {}
 }
 
-export function isAuthed() {
-  return !!localStorage.getItem(AUTH_KEY);
+export function getUser(): AuthUser | null {
+  return read();
+}
+export function getRole(): Role | null {
+  return read()?.role ?? null;
+}
+export function isAuthed(): boolean {
+  return !!read();
 }
 
-export function isAdmin() {
-  return localStorage.getItem(ROLE_KEY) === "admin";
+export async function syncFromBackendless(Backendless: typeof BackendlessType) {
+  try {
+    const current = await Backendless.UserService.getCurrentUser();
+    if (!current) {
+      if (isAuthed()) logout(); // clear local if it was set
+      return null;
+    }
+    const email = (current as any)?.email ?? "";
+    const role: Role =
+      ((current as any)?.role || (current as any)?.userRole || "user") as Role;
+
+    login(email, role);
+    return { email, role } as AuthUser;
+  } catch {
+    return null;
+  }
 }

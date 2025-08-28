@@ -1,17 +1,19 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
 
-type TeamMember = {
+// Types
+interface TeamMember {
   name: string;
   role: string;
   bio: string;
   image?: string;
-};
+}
 
+// Data
 const TEAM: TeamMember[] = [
   {
     name: "Dr. Adrian Setiawan",
@@ -52,81 +54,74 @@ const TEAM: TeamMember[] = [
 ];
 
 export default function AboutPage() {
+  // Responsive items-per-view for the carousel (md:2, lg:3)
+  const [itemsPerView, setItemsPerView] = useState(1);
+  useEffect(() => {
+    const compute = () => {
+      const w = window.innerWidth;
+      setItemsPerView(w >= 1024 ? 3 : w >= 768 ? 2 : 1);
+    };
+    compute();
+    window.addEventListener("resize", compute);
+    return () => window.removeEventListener("resize", compute);
+  }, []);
+
   const [currentIndex, setCurrentIndex] = useState(0);
-  const itemsPerView = 3;
   const maxIndex = Math.max(0, TEAM.length - itemsPerView);
 
-  const goToPrevious = () => {
-    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : maxIndex));
+  const goToPrevious = () => setCurrentIndex((p) => (p > 0 ? p - 1 : maxIndex));
+  const goToNext = () => setCurrentIndex((p) => (p < maxIndex ? p + 1 : 0));
+
+  // basic touch support (mobile swipe)
+  let touchStartX = 0;
+  let touchEndX = 0;
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX = e.changedTouches[0].clientX;
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    touchEndX = e.changedTouches[0].clientX;
+    const delta = touchEndX - touchStartX;
+    if (Math.abs(delta) > 40) {
+      delta > 0 ? goToPrevious() : goToNext();
+    }
   };
 
-  const goToNext = () => {
-    setCurrentIndex((prev) => (prev < maxIndex ? prev + 1 : 0));
-  };
   return (
     <>
       <Navbar />
       <main className="bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 text-black">
-        {/* Hero / Title */}
-        <section className="relative mx-auto max-w-7xl px-6 pt-14 pb-10 sm:pt-20">
-          <div className="absolute inset-0 bg-gradient-to-r from-orange-200/20 to-yellow-200/20 rounded-3xl"></div>
+        {/* HERO */}
+        <section className="relative mx-auto max-w-7xl px-4 sm:px-6 pt-16 sm:pt-20 pb-8">
+          <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-orange-200/20 to-yellow-200/20" />
           <div className="relative">
-            <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
               About Purrfect Getaway
             </h1>
-            <p className="mt-6 max-w-3xl text-xl leading-8 text-slate-700">
-              A cozy cat hotel & day care where every guest feels safe, loved,
-              and entertained.
+            <p className="mt-4 sm:mt-6 max-w-3xl text-base sm:text-lg md:text-xl leading-relaxed text-slate-700">
+              A cozy cat hotel & day care where every guest feels safe, loved, and entertained.
             </p>
-            <div className="mt-8 flex items-center space-x-6">
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="text-sm font-medium text-slate-600">
-                  Est. 2020
-                </span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-orange-400 rounded-full animate-pulse"></div>
-                <span className="text-sm font-medium text-slate-600">
-                  1000+ Happy Guests
-                </span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-pink-400 rounded-full animate-pulse"></div>
-                <span className="text-sm font-medium text-slate-600">
-                  Professional Care
-                </span>
-              </div>
+            <div className="mt-6 sm:mt-8 flex flex-wrap items-center gap-4 sm:gap-6 text-sm font-medium text-slate-600">
+              <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-green-400 animate-pulse" />Est. 2020</div>
+              <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-orange-400 animate-pulse" />1000+ Happy Guests</div>
+              <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-pink-400 animate-pulse" />Professional Care</div>
             </div>
           </div>
         </section>
 
-        {/* Company History */}
-        <section className="mx-auto max-w-7xl px-6 py-16">
-          <div className="relative bg-white rounded-3xl shadow-xl border border-orange-100 p-8 lg:p-12">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-100 to-yellow-100 rounded-bl-3xl opacity-50"></div>
-            <div className="grid items-start gap-12 lg:grid-cols-2">
-              <div className="relative">
-                <h2 className="text-3xl font-bold sm:text-4xl text-slate-900 mb-2">
-                  Company History
-                </h2>
-                <div className="w-20 h-1 bg-gradient-to-r from-orange-400 to-yellow-400 rounded-full mb-8"></div>
-                <div className="prose prose-lg max-w-none text-slate-700 leading-relaxed">
-                  <p className="text-lg">
-                    Purrfect Getaway began with a simple idea: every cat
-                    deserves a safe, cozy, and joyful place to stay when their
-                    families are away. Founded in 2020 by lifelong cat lovers
-                    and veterinary professionals, we opened our first location
-                    in Jakarta with just six suites and a dream of providing
-                    hotel‑level comfort for cats.
+        {/* COMPANY HISTORY */}
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 py-12 sm:py-16">
+          <div className="relative rounded-3xl border border-orange-100 bg-white shadow-xl p-5 sm:p-8 lg:p-12">
+            <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 rounded-bl-3xl bg-gradient-to-br from-orange-100 to-yellow-100 opacity-50" />
+            <div className="grid gap-8 lg:grid-cols-2 lg:gap-12 items-start">
+              <div>
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-2">Company History</h2>
+                <div className="w-16 sm:w-20 h-1 rounded-full bg-gradient-to-r from-orange-400 to-yellow-400 mb-6 sm:mb-8" />
+                <div className="prose max-w-none text-slate-700">
+                  <p className="text-base sm:text-lg leading-relaxed">
+                    Purrfect Getaway began with a simple idea: every cat deserves a safe, cozy, and joyful place to stay when their families are away. Founded in 2020 by lifelong cat lovers and veterinary professionals, we opened our first location in Jakarta with just six suites and a dream of providing hotel‑level comfort for cats.
                   </p>
-                  <p className="text-lg">
-                    Within the first year, we introduced themed playrooms and
-                    on‑site veterinary support—becoming one of the region's
-                    first cat hotels to pair luxury boarding with professional
-                    medical oversight. By 2023, we welcomed our 1,000th guest,
-                    and we've continued to grow while staying true to our
-                    mission: a second home filled with warmth, care, and play.
+                  <p className="text-base sm:text-lg leading-relaxed mt-4">
+                    Within the first year, we introduced themed playrooms and on‑site veterinary support—becoming one of the region's first cat hotels to pair luxury boarding with professional medical oversight. By 2023, we welcomed our 1,000th guest, and we've continued to grow while staying true to our mission: a second home filled with warmth, care, and play.
                   </p>
                 </div>
               </div>
@@ -136,105 +131,91 @@ export default function AboutPage() {
                   src="/heroPurrfect.png"
                   alt="Our team caring for a feline guest at the front desk"
                   fill
-                  className="object-cover hover:scale-105 transition-transform duration-700"
+                  className="object-cover transition-transform duration-700 hover:scale-105"
                   priority
-                  sizes="(min-width:1024px) 560px, 100vw"
+                  sizes="(min-width:1024px) 560px, (min-width:768px) 50vw, 100vw"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
               </div>
             </div>
           </div>
         </section>
 
-        {/* Team */}
-        <section className="mx-auto max-w-7xl px-6 py-16">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold sm:text-4xl text-slate-900 mb-4">
-              Meet Our Team
-            </h2>
-            <div className="w-20 h-1 bg-gradient-to-r from-orange-400 to-yellow-400 rounded-full mx-auto mb-6"></div>
-            <p className="max-w-3xl text-lg text-slate-600 mx-auto">
-              Professional expertise + genuine love for cats. Here are the
-              people who make every stay special.
+        {/* TEAM */}
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 py-12 sm:py-16">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-3 sm:mb-4">Meet Our Team</h2>
+            <div className="w-16 sm:w-20 h-1 rounded-full bg-gradient-to-r from-orange-400 to-yellow-400 mx-auto mb-4 sm:mb-6" />
+            <p className="mx-auto max-w-3xl text-slate-600 text-base sm:text-lg">
+              Professional expertise + genuine love for cats. Here are the people who make every stay special.
             </p>
           </div>
 
-          {/* Carousel Container */}
-          <div className="relative mt-12 bg-white rounded-3xl shadow-xl border border-orange-100 p-8">
-            {/* Navigation Buttons */}
+          {/* Desktop/Tablet: carousel with arrows; Mobile: swipeable + snap */}
+          <div className="relative mt-8 rounded-3xl border border-orange-100 bg-white p-4 sm:p-6 shadow-xl">
+            {/* Arrows (hidden on small screens) */}
             <button
               onClick={goToPrevious}
-              className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-gradient-to-r from-orange-400 to-orange-500 text-white shadow-lg p-4 hover:from-orange-500 hover:to-orange-600 transition-all duration-300 hover:scale-110"
+              className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 z-10 items-center justify-center rounded-full bg-gradient-to-r from-orange-400 to-orange-500 text-white shadow-lg p-3 hover:scale-110 transition"
               aria-label="Previous team members"
             >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/></svg>
             </button>
-
             <button
               onClick={goToNext}
-              className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-gradient-to-r from-pink-300 to-pink-400 text-white shadow-lg p-4 hover:from-pink-400 hover:to-pink-500 transition-all duration-300 hover:scale-110"
+              className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 z-10 items-center justify-center rounded-full bg-gradient-to-r from-pink-300 to-pink-400 text-white shadow-lg p-3 hover:scale-110 transition"
               aria-label="Next team members"
             >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
             </button>
 
-            {/* Carousel Track */}
-            <div className="overflow-hidden mx-12">
+            {/* Track */}
+            <div className="overflow-hidden md:mx-10" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
               <div
-                className="flex transition-transform duration-500 ease-in-out"
-                style={{
-                  transform: `translateX(-${
-                    currentIndex * (100 / itemsPerView)
-                  }%)`,
-                }}
+                className="hidden md:flex transition-transform duration-500 ease-in-out"
+                style={{ transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)` }}
               >
                 {TEAM.map((m) => (
-                  <article key={m.name} className="flex-shrink-0 w-1/3 px-4">
-                    <div className="group flex flex-col rounded-3xl border-2 border-orange-100 shadow-lg transition-all duration-300 hover:shadow-2xl hover:border-orange-200 overflow-hidden h-full bg-white">
-                      <div className="relative h-80 w-full overflow-hidden">
+                  <article key={m.name} className="w-1/2 lg:w-1/3 flex-shrink-0 px-3 lg:px-4">
+                    <div className="group flex h-full flex-col overflow-hidden rounded-3xl border-2 border-orange-100 bg-white shadow-lg transition hover:shadow-2xl hover:border-orange-200">
+                      <div className="relative h-64 md:h-72 lg:h-80 w-full overflow-hidden">
                         <Image
-                          src={m.image!}
+                          src={m.image || "/placeholder.jpg"}
                           alt={m.name}
                           fill
-                          className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
-                          sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                          className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                          sizes="(min-width:1024px) 33vw, (min-width:768px) 50vw, 100vw"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-orange-900/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-t from-orange-900/20 via-transparent to-transparent" />
                       </div>
-                      <div className="p-8 flex-1 text-center">
-                        <h3 className="text-2xl font-bold text-slate-900 mb-2">
-                          {m.name}
-                        </h3>
-                        <p className="text-sm font-semibold text-orange-600 uppercase tracking-wide mb-4">
-                          {m.role}
-                        </p>
-                        <p className="text-slate-600 leading-relaxed">
-                          {m.bio}
-                        </p>
+                      <div className="flex-1 p-6 text-center">
+                        <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-slate-900">{m.name}</h3>
+                        <p className="mt-1 text-xs sm:text-sm font-semibold uppercase tracking-wide text-orange-600">{m.role}</p>
+                        <p className="mt-3 text-sm sm:text-base leading-relaxed text-slate-600">{m.bio}</p>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+
+              {/* Mobile: horizontal scroll with snap */}
+              <div className="md:hidden flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 -mb-2">
+                {TEAM.map((m) => (
+                  <article key={m.name} className="snap-start flex-none w-[18rem]">
+                    <div className="group flex h-full flex-col overflow-hidden rounded-3xl border-2 border-orange-100 bg-white shadow-lg">
+                      <div className="relative h-56 w-full overflow-hidden">
+                        <Image
+                          src={m.image || "/placeholder.jpg"}
+                          alt={m.name}
+                          fill
+                          className="object-cover object-center"
+                          sizes="100vw"
+                        />
+                      </div>
+                      <div className="p-5 text-center">
+                        <h3 className="text-lg font-bold text-slate-900">{m.name}</h3>
+                        <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-orange-600">{m.role}</p>
+                        <p className="mt-2 text-sm leading-relaxed text-slate-600">{m.bio}</p>
                       </div>
                     </div>
                   </article>
@@ -242,145 +223,66 @@ export default function AboutPage() {
               </div>
             </div>
 
-            {/* Dots Indicator */}
-            <div className="flex justify-center mt-10 space-x-3">
-              {Array.from({ length: maxIndex + 1 }).map((_, index) => (
+            {/* Dots */}
+            <div className="hidden md:flex justify-center mt-6 gap-2">
+              {Array.from({ length: maxIndex + 1 }).map((_, i) => (
                 <button
-                  key={index}
-                  onClick={() => setCurrentIndex(index)}
-                  className={`w-4 h-4 rounded-full transition-all duration-300 ${
-                    index === currentIndex
-                      ? "bg-gradient-to-r from-orange-400 to-yellow-400 scale-110"
-                      : "bg-orange-200 hover:bg-orange-300"
-                  }`}
-                  aria-label={`Go to slide ${index + 1}`}
+                  key={i}
+                  onClick={() => setCurrentIndex(i)}
+                  aria-label={`Go to slide ${i + 1}`}
+                  className={`h-3 w-3 rounded-full transition ${i === currentIndex ? "bg-gradient-to-r from-orange-400 to-yellow-400 scale-110" : "bg-orange-200 hover:bg-orange-300"}`}
                 />
               ))}
             </div>
           </div>
         </section>
 
-        {/* Culture */}
-        <section className="mx-auto max-w-7xl px-6 pb-20 pt-16">
-          <div className="relative bg-gradient-to-br from-orange-50 to-yellow-50 rounded-3xl p-8 lg:p-12 border border-orange-100">
-            <div className="absolute top-0 left-0 w-40 h-40 bg-gradient-to-br from-orange-300/20 to-yellow-300/20 rounded-br-3xl"></div>
+        {/* CULTURE */}
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 pb-16 pt-12 sm:pt-16">
+          <div className="relative rounded-3xl border border-orange-100 bg-gradient-to-br from-orange-50 to-yellow-50 p-6 sm:p-8 lg:p-12">
+            <div className="absolute top-0 left-0 h-28 w-28 sm:h-40 sm:w-40 rounded-br-3xl bg-gradient-to-br from-orange-300/20 to-yellow-300/20" />
             <div className="relative">
-              <h2 className="text-3xl font-bold sm:text-4xl text-slate-900 mb-4 text-center">
-                Our Culture
-              </h2>
-              <div className="w-20 h-1 bg-gradient-to-r from-orange-400 to-yellow-400 rounded-full mx-auto mb-8"></div>
-              <div className="prose prose-lg max-w-none text-slate-700">
-                <p className="text-xl leading-relaxed mb-8 text-center">
-                  At Purrfect Getaway, our culture is built on more than
-                  policies or procedures — it's a heartbeat that runs through
-                  everything we do. Every meow, every purr, and every playful
-                  paw reminds us that our guests aren't just pets, they're
-                  family. That belief shapes the way we work, the way we treat
-                  one another, and the way we dream about the future.
+              <h2 className="text-center text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-4">Our Culture</h2>
+              <div className="mx-auto mb-6 sm:mb-8 h-1 w-16 sm:w-20 rounded-full bg-gradient-to-r from-orange-400 to-yellow-400" />
+              <div className="text-slate-700">
+                <p className="mx-auto max-w-4xl text-center text-base sm:text-lg leading-relaxed mb-6 sm:mb-8">
+                  At Purrfect Getaway, our culture is built on more than policies or procedures — it's a heartbeat that runs through everything we do. Every meow, every purr, and every playful paw reminds us that our guests aren't just pets, they're family.
+                </p>
+                <p className="mx-auto max-w-4xl text-center text-base sm:text-lg leading-relaxed mb-8">
+                  Our values can be summed up in three simple words: <strong className="text-orange-600">Compassion</strong>, <strong className="text-pink-500">Safety</strong>, and <strong className="text-green-500">Playfulness</strong>.
                 </p>
 
-                <p className="text-lg leading-relaxed mb-8 text-center">
-                  Our values can be summed up in three simple words:
-                  <strong className="text-orange-600"> Compassion</strong>,{" "}
-                  <strong className="text-pink-500">Safety</strong>, and
-                  <strong className="text-green-500"> Playfulness</strong>.
-                  These aren't just ideas on a wall, they are living practices
-                  you'll feel from the moment you walk through our doors.
-                </p>
-
-                <div className="grid md:grid-cols-3 gap-8 my-12">
-                  <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-orange-100 hover:border-orange-200 transition-colors">
-                    <div className="w-12 h-12 bg-gradient-to-r from-orange-400 to-orange-500 rounded-full flex items-center justify-center mb-4">
-                      <svg
-                        className="w-6 h-6 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                        />
-                      </svg>
+                <div className="grid gap-6 md:grid-cols-3 md:gap-8 my-8 md:my-12">
+                  {/* Card 1 */}
+                  <div className="rounded-2xl border-2 border-orange-100 bg-white p-5 shadow-lg transition-colors hover:border-orange-200">
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-orange-400 to-orange-500">
+                      <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
                     </div>
-                    <h3 className="text-xl font-bold text-orange-600 mb-3">
-                      Compassion
-                    </h3>
-                    <p className="text-slate-600">
-                      We approach every cat with gentle patience, kindness, and
-                      respect. Whether a shy kitten hiding behind the scratching
-                      post or a senior cat needing special care, we slow down,
-                      listen, and respond with love.
-                    </p>
+                    <h3 className="mb-2 text-lg sm:text-xl font-bold text-orange-600">Compassion</h3>
+                    <p className="text-slate-600 text-sm sm:text-base">We approach every cat with gentle patience, kindness, and respect. Whether a shy kitten or a senior cat needing special care, we slow down, listen, and respond with love.</p>
                   </div>
 
-                  <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-pink-100 hover:border-pink-200 transition-colors">
-                    <div className="w-12 h-12 bg-gradient-to-r from-pink-300 to-pink-400 rounded-full flex items-center justify-center mb-4">
-                      <svg
-                        className="w-6 h-6 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                        />
-                      </svg>
+                  {/* Card 2 */}
+                  <div className="rounded-2xl border-2 border-pink-100 bg-white p-5 shadow-lg transition-colors hover:border-pink-200">
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-pink-300 to-pink-400">
+                      <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                     </div>
-                    <h3 className="text-xl font-bold text-pink-500 mb-3">
-                      Safety
-                    </h3>
-                    <p className="text-slate-600">
-                      Behind the cozy suites and playful décor lies an
-                      uncompromising standard. From veterinarian-led health
-                      checks and daily monitoring to meticulous cleaning and
-                      hygiene, safety is the quiet promise we keep every single
-                      day.
-                    </p>
+                    <h3 className="mb-2 text-lg sm:text-xl font-bold text-pink-500">Safety</h3>
+                    <p className="text-slate-600 text-sm sm:text-base">Vet‑led health checks, daily monitoring, and meticulous hygiene. Safety is the quiet promise we keep every single day.</p>
                   </div>
 
-                  <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-green-100 hover:border-green-200 transition-colors">
-                    <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-green-500 rounded-full flex items-center justify-center mb-4">
-                      <svg
-                        className="w-6 h-6 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.01M15 10h1.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
+                  {/* Card 3 */}
+                  <div className="rounded-2xl border-2 border-green-100 bg-white p-5 shadow-lg transition-colors hover:border-green-200">
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-green-400 to-green-500">
+                      <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.01M15 10h1.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </div>
-                    <h3 className="text-xl font-bold text-green-500 mb-3">
-                      Playfulness
-                    </h3>
-                    <p className="text-slate-600">
-                      Joy is contagious, and we believe cats should never have
-                      to leave theirs at home. Our team brings creativity to
-                      enrichment: themed playrooms, climbing towers, and
-                      interactive games that spark curiosity and laughter — for
-                      both cats and humans.
-                    </p>
+                    <h3 className="mb-2 text-lg sm:text-xl font-bold text-green-500">Playfulness</h3>
+                    <p className="text-slate-600 text-sm sm:text-base">Themed playrooms, climbing towers, and interactive games that spark curiosity and joy—for cats and humans.</p>
                   </div>
                 </div>
 
-                <p className="text-lg leading-relaxed text-center">
-                  But culture at Purrfect Getaway isn't only about cats — it's
-                  about people too. We support one another with the same warmth
-                  we extend to our guests. Collaboration, ongoing learning, and
-                  shared laughter make our workplace feel less like a job and
-                  more like a community. It's this spirit — human and feline
-                  together — that transforms Purrfect Getaway from a simple cat
-                  hotel into a true second home.
+                <p className="mx-auto max-w-4xl text-center text-base sm:text-lg leading-relaxed">
+                  Our team supports one another with the same warmth we extend to our guests. Collaboration, ongoing learning, and shared laughter make our workplace a community—and a true second home.
                 </p>
               </div>
             </div>
@@ -391,3 +293,4 @@ export default function AboutPage() {
     </>
   );
 }
+
