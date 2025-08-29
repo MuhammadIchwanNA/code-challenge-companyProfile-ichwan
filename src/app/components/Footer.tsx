@@ -106,7 +106,7 @@ export default function Footer() {
               <ul className="space-y-2">
                 <li>
                   <Link
-                    href="#"
+                    href="/"
                     className="text-gray-700 hover:text-gray-900 transition-colors duration-200 text-sm"
                     style={{ fontFamily: "var(--font-mono)" }}
                   >
@@ -115,7 +115,7 @@ export default function Footer() {
                 </li>
                 <li>
                   <Link
-                    href="#about"
+                    href="/about"
                     className="text-gray-700 hover:text-gray-900 transition-colors duration-200 text-sm"
                     style={{ fontFamily: "var(--font-mono)" }}
                   >
@@ -124,7 +124,7 @@ export default function Footer() {
                 </li>
                 <li>
                   <Link
-                    href="#services"
+                    href="/services"
                     className="text-gray-700 hover:text-gray-900 transition-colors duration-200 text-sm"
                     style={{ fontFamily: "var(--font-mono)" }}
                   >
