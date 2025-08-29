@@ -255,7 +255,8 @@ export default function TeamsPage() {
             dedicated professionals to join our team.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
+            <a
+              href="/coming-soon"
               className="px-8 py-4 font-semibold rounded-lg hover:scale-105 transform transition-all duration-200 shadow-md hover:shadow-lg"
               style={{
                 backgroundColor: "var(--SoftWood)",
@@ -264,8 +265,9 @@ export default function TeamsPage() {
               }}
             >
               View Open Positions
-            </button>
-            <button
+            </a>
+            <a
+              href="/coming-soon"
               className="px-8 py-4 border-2 font-semibold rounded-lg transition-all duration-200"
               style={{
                 borderColor: "var(--SoftWood)",
@@ -274,7 +276,7 @@ export default function TeamsPage() {
               }}
             >
               Contact HR
-            </button>
+            </a>
           </div>
         </div>
       </section>
