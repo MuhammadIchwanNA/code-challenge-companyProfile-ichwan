@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Libre_Franklin, Red_Hat_Mono, DM_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const libre = Libre_Franklin({ subsets: ["latin"], variable: "--font-libre" });
 const mono = Red_Hat_Mono({ subsets: ["latin"], variable: "--font-mono" });
@@ -26,7 +28,11 @@ export default function RootLayout({
       className={`${libre.variable} ${mono.variable}`}
       data-scroll-behavior="smooth"
     >
-      <body className="bg-[#F5F5F5] text-black">{children}</body>
+      <body className="bg-[#F5F5F5] text-black">
+        {children}
+        <Analytics />
+        <SpeedInsights />
+      </body>
     </html>
   );
 }

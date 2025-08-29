@@ -8,6 +8,8 @@
     "start": "next start"
   },
   "dependencies": {
+    "@vercel/analytics": "^1.5.0",
+    "@vercel/speed-insights": "^1.2.0",
     "backendless": "^7.4.7",
     "formik": "^2.4.6",
     "next": "15.5.0",
